@@ -57,7 +57,7 @@ public class MainActivity extends AppCompatActivity {
 //        String selection = TasksContract.Columns.TASKS_SORTORDER + " = ?";
 //        String[] args = {"99"};
 //        int count = contentResolver.update(TasksContract.CONTENT_URI, values, selection, args); // args have to be array; each values in args is replaced in the order they appear in the array
-        
+
         // delete
 //        int count = contentResolver.delete(TasksContract.buildTaskUri(3), null, null); // 3 is the id, can change to selection e.g
 //        String selection = TasksContract.Columns.TASKS_DESCRIPTION + " = ?";
@@ -111,7 +111,7 @@ public class MainActivity extends AppCompatActivity {
         int id = item.getItemId();
 
         //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
+        if (id == R.id.menumain_settings) {
             return true;
         }
 
