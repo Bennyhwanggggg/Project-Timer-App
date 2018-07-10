@@ -2,6 +2,7 @@ package benny.dev.tasktimer;
 
 import android.content.ContentResolver;
 import android.content.ContentValues;
+import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
@@ -17,6 +18,11 @@ import android.view.MenuItem;
 
 public class MainActivity extends AppCompatActivity {
     private static final String TAG = "MainActivity";
+
+    // Whether or not the activity is in 2-pane modes, i.e landscape on tablet
+    private boolean mTwoPane = false;
+
+    private static final String ADD_EDIT_FRAGMENT = "AddEditFragment";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -71,29 +77,24 @@ public class MainActivity extends AppCompatActivity {
 //                null,
 //                null,
 //                TasksContract.Columns.TASKS_SORTORDER);
-
-        if(cursor != null){
-            Log.d(TAG, "onCreate: number of rows = " + cursor.getCount());
-            while (cursor.moveToNext()){
-                for(int i=0; i<cursor.getColumnCount(); i++){
-                    Log.d(TAG, "onCreate: " + cursor.getColumnName(i) + ": " + cursor.getString(i));
-                }
-                Log.d(TAG, "onCreate: +++++++++++++++++++++++");
-            }
-            cursor.close();
-        }
+//
+            // To move through query result
+//        if(cursor != null){
+//            Log.d(TAG, "onCreate: number of rows = " + cursor.getCount());
+//            while (cursor.moveToNext()){
+//                for(int i=0; i<cursor.getColumnCount(); i++){
+//                    Log.d(TAG, "onCreate: " + cursor.getColumnName(i) + ": " + cursor.getString(i));
+//                }
+//                Log.d(TAG, "onCreate: +++++++++++++++++++++++");
+//            }
+//            cursor.close();
+//        }
 //        AppDatabase appDatabase = AppDatabase.getInstance(this);
 //
 //        final SQLiteDatabase db = appDatabase.getReadableDatabase();
 
-        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
-        fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
-            }
-        });
+
+
     }
 
     @Override
@@ -110,11 +111,38 @@ public class MainActivity extends AppCompatActivity {
         // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
 
-        //noinspection SimplifiableIfStatement
-        if (id == R.id.menumain_settings) {
-            return true;
+        switch (id){
+            case R.id.menumain_addTask:
+                taskEditRequest(null);
+                break;
+            case R.id.menumain_showDurations:
+                break;
+            case R.id.menumain_settings:
+                break;
+            case R.id.menumain_showAbout:
+                break;
+            case R.id.menumain_generate:
+                break;
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    private void taskEditRequest(Task task){
+        Log.d(TAG, "taskEditRequest: starts");
+        if(mTwoPane){
+            Log.d(TAG, "taskEditRequest: Tablet mode");
+        } else {
+            Log.d(TAG, "taskEditRequest: Single pane mode");
+            // start the activity for the selected item id.
+            Intent detailIntent = new Intent(this, AddEditActivity.class);
+            if(task != null){ // editing a task
+                detailIntent.putExtra(Task.class.getSimpleName(), task);
+                startActivity(detailIntent);
+            } else {
+                // adding a new task
+                startActivity(detailIntent);
+            }
+        }
     }
 }
