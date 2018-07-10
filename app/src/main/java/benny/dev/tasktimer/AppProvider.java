@@ -193,7 +193,7 @@ public class AppProvider extends ContentProvider {
                 break;
             case TASKS_ID:
                 db = mOpenHelper.getWritableDatabase();
-                long taskId = TasksContract.getTaskId();
+                long taskId = TasksContract.getTaskId(uri);
                 selectionCriteria = TasksContract.Columns._ID + " = " + taskId;
                 if(selection != null && selection.length()>0){
                     selectionCriteria += " AND (" + selection + ")";
@@ -206,7 +206,7 @@ public class AppProvider extends ContentProvider {
 //                break;
 //            case TIMINGS_ID:
 //                db = mOpenHelper.getWritableDatabase();
-//                long timingsId = TimingsContract.getTaskId();
+//                long timingsId = TimingsContract.getTaskId(uri);
 //                selectionCriteria = TimingsContract.Columns._ID + " = " + timingsId;
 //                if(selection != null && selection.length()>0){
 //                    selectionCriteria += " AND (" + selection + ")";
@@ -236,7 +236,7 @@ public class AppProvider extends ContentProvider {
                 break;
             case TASKS_ID:
                 db = mOpenHelper.getWritableDatabase();
-                long taskId = TasksContract.getTaskId();
+                long taskId = TasksContract.getTaskId(uri);
                 selectionCriteria = TasksContract.Columns._ID + " = " + taskId;
                 if(selection != null && selection.length()>0){
                     selectionCriteria += " AND (" + selection + ")";
@@ -249,7 +249,7 @@ public class AppProvider extends ContentProvider {
 //                break;
 //            case TIMINGS_ID:
 //                db = mOpenHelper.getWritableDatabase();
-//                long timingsId = TimingsContract.getTaskId();
+//                long timingsId = TimingsContract.getTaskId(uri);
 //                selectionCriteria = TimingsContract.Columns._ID + " = " + timingsId;
 //                if(selection != null && selection.length()>0){
 //                    selectionCriteria += " AND (" + selection + ")";
