@@ -6,4 +6,11 @@
     <string name="menumain_settings">Settings</string>
     <string name="menumain_showAbout">About Task Timer</string>
     <string name="menumain_generate">Generate data</string>
+    <string name="no_task_message">No task selected.</string>
+    <string name="edit_button_description">button to edit task detail</string>
+    <string name="delete_button_description">button to delete task</string>
+    <string name="addedit_name_hint">Task name: required</string>
+    <string name="addedit_description_hint">Task description (optional)</string>
+    <string name="addedit_sort_hint">Orders: sorts low to high</string>
+    <string name="addedit_save_text">Save</string>
 </resources>
