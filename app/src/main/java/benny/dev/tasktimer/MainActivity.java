@@ -1,31 +1,24 @@
 package benny.dev.tasktimer;
 
-import android.content.ContentResolver;
-import android.content.ContentValues;
 import android.content.Intent;
-import android.database.Cursor;
-import android.database.sqlite.SQLiteDatabase;
-import android.net.Uri;
 import android.os.Bundle;
-import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
-import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
 
-public class MainActivity extends AppCompatActivity implements CursorRecyclerViewAdapter.OnTaskClickListener, AddEditActivityFragment.OnSaveClicked{
+public class MainActivity extends AppCompatActivity implements CursorRecyclerViewAdapter.OnTaskClickListener,
+        AddEditActivityFragment.OnSaveClicked,
+        AppDialog.DialogEvents {
+    public static final int DELETE_DIALOG_ID = 1;
     private static final String TAG = "MainActivity";
-
+    private static final String ADD_EDIT_FRAGMENT = "AddEditFragment";
     // Whether or not the activity is in 2-pane modes, i.e landscape on tablet
     private boolean mTwoPane = false;
-
-    private static final String ADD_EDIT_FRAGMENT = "AddEditFragment";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -34,7 +27,7 @@ public class MainActivity extends AppCompatActivity implements CursorRecyclerVie
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        if(findViewById(R.id.task_details_container) != null){
+        if (findViewById(R.id.task_details_container) != null) {
             // the detail container will only be present in the large screen layouts (res/values-land and res/values-sw600dp
             // if this view is present, the activity should be in two-pane mode
             mTwoPane = true;
@@ -87,7 +80,7 @@ public class MainActivity extends AppCompatActivity implements CursorRecyclerVie
 //                null,
 //                TasksContract.Columns.TASKS_SORTORDER);
 //
-            // To move through query result
+        // To move through query result
 //        if(cursor != null){
 //            Log.d(TAG, "onCreate: number of rows = " + cursor.getCount());
 //            while (cursor.moveToNext()){
@@ -103,7 +96,6 @@ public class MainActivity extends AppCompatActivity implements CursorRecyclerVie
 //        final SQLiteDatabase db = appDatabase.getReadableDatabase();
 
 
-
     }
 
     @Override
@@ -112,7 +104,7 @@ public class MainActivity extends AppCompatActivity implements CursorRecyclerVie
         // remove fragment after click.
         FragmentManager fragmentManager = getSupportFragmentManager();
         Fragment fragment = fragmentManager.findFragmentById(R.id.task_details_container);
-        if(fragment != null){
+        if (fragment != null) {
             // can simplify to one line.
             FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
             fragmentTransaction.remove(fragment);
@@ -134,7 +126,7 @@ public class MainActivity extends AppCompatActivity implements CursorRecyclerVie
         // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
 
-        switch (id){
+        switch (id) {
             case R.id.menumain_addTask:
                 taskEditRequest(null);
                 break;
@@ -158,12 +150,28 @@ public class MainActivity extends AppCompatActivity implements CursorRecyclerVie
 
     @Override
     public void onDeleteClick(Task task) {
-        getContentResolver().delete(TasksContract.buildTaskUri(task.getId()), null, null);
+        // call dialog to confirm delete before actual delete
+        Log.d(TAG, "onDeleteClick: starts");
+        AppDialog dialog = new AppDialog();
+        Bundle args = new Bundle();
+        args.putInt(AppDialog.DIALOG_ID, DELETE_DIALOG_ID); // put DELETE_DIALOG_ID into AppDialog.DIALOG_ID
+        args.putString(AppDialog.DIALOG_MESSAGE, getString(R.string.deldiag_message));
+        args.putInt(AppDialog.DIALOG_POSITIVE_RID, R.string.deldiag_positive_caption);
+
+        // put args in bundle to be passed into dialog
+        args.putLong("TaskId", task.getId());
+
+        dialog.setArguments(args);
+        dialog.show(getFragmentManager(), null);
+
+        // if not commented, when dialog popup delete occurs anyway
+//        getContentResolver().delete(TasksContract.buildTaskUri(task.getId()), null, null); // this uses contentresolvers method to delete
+
     }
 
-    private void taskEditRequest(Task task){
+    private void taskEditRequest(Task task) {
         Log.d(TAG, "taskEditRequest: starts");
-        if(mTwoPane){
+        if (mTwoPane) {
             Log.d(TAG, "taskEditRequest: Two pane mode");
             // get fragment manager to add fragment
             AddEditActivityFragment fragment = new AddEditActivityFragment();
@@ -183,7 +191,7 @@ public class MainActivity extends AppCompatActivity implements CursorRecyclerVie
             Log.d(TAG, "taskEditRequest: Single pane mode");
             // start the activity for the selected item id.
             Intent detailIntent = new Intent(this, AddEditActivity.class);
-            if(task != null){ // editing a task
+            if (task != null) { // editing a task
                 detailIntent.putExtra(Task.class.getSimpleName(), task);
                 startActivity(detailIntent);
             } else {
@@ -191,5 +199,27 @@ public class MainActivity extends AppCompatActivity implements CursorRecyclerVie
                 startActivity(detailIntent);
             }
         }
+    }
+
+    @Override
+    public void onPositiveDialogResult(int dialogId, Bundle args) {
+        Log.d(TAG, "onPositiveDialogResult: starts");
+        // delete after user confirms
+        Long taskId = args.getLong("TaskId"); // "TaskId" matches what we did above in onDelete method
+        if (BuildConfig.DEBUG && taskId == 0) {
+            throw new AssertionError("TaskId is zero");
+        }
+        getContentResolver().delete(TasksContract.buildTaskUri(taskId), null, null);
+    }
+
+    @Override
+    public void onNegativeDialogResult(int dialogId, Bundle args) {
+        Log.d(TAG, "onNegativeDialogResult: starts");
+    }
+
+    // users press back button, then nothing happens
+    @Override
+    public void onDialogCancelled(int dialogId) {
+        Log.d(TAG, "onDialogCancelled: starts");
     }
 }
