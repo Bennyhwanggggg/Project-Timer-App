@@ -23,4 +23,8 @@
     <string name="cancelEditDiag_message">Unsaved changes will be discarded. Are you sure?</string>
     <string name="cancelEditDiag_positive_caption">Continue</string>
     <string name="cancelEditDiag_negative_caption">Abandon Changes</string>
+    <string name="about_copyright">Copyright \u00a9 2018 Benny Hwang</string>
+    <string name="about_weblink">See source at bennyhwanggggg@githum.com</string>
+    <string name="about_email">For support email: bennyhwanggggg@noreply.github.com</string>
+    <string name="about_credits">Icon derived from <b>Analog Clock</b> at Openclipart.org by Anonymous</string>
 </resources>
