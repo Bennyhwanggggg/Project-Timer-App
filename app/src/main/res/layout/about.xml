@@ -24,8 +24,8 @@
         android:layout_width="match_parent"
         android:layout_height="1dp"
         android:layout_marginTop="8dp"
-        android:background="@android:drawable/divider_horizontal_dark"
-        android:textColor="?android:attr/textColorSecondary" />
+        android:background="?android:attr/listDivider"
+        android:textColor="?android:attr/textColorSecondary"/>
 
     <TextView
         android:id="@+id/about_copyright"
