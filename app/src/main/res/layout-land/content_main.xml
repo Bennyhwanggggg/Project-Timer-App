@@ -4,6 +4,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="horizontal"
+    android:weightSum="2"
     app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
     <fragment
@@ -11,8 +12,17 @@
         android:name="benny.dev.tasktimer.MainActivityFragment"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:layout_weight="1"
         app:layout_behavior="@string/appbar_scrolling_view_behavior"
         tools:layout="@layout/fragment_main" />
+
+    <FrameLayout
+        android:id="@+id/task_details_container"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_weight="1">
+
+    </FrameLayout>
 
 </LinearLayout>
 

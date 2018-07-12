@@ -41,7 +41,10 @@ public class AddEditActivityFragment extends Fragment {
         mSortOrderTextView = (EditText) view.findViewById(R.id.addedit_sortorder);
         mSaveButton = (Button) view.findViewById(R.id.addedit_save);
 
-        Bundle arguments = getActivity().getIntent().getExtras();
+//        Bundle arguments = getActivity().getIntent().getExtras(); // doesn't work when fragment is reused. This relies on the activities having the necessary intent.
+
+        // fragment should be provided the data it needs not go looking for it like above.
+        Bundle arguments = getArguments(); // we already put the arguments for fragment in MainActivity where we did fragment.Arguments()...
 
         final Task task;
         if(arguments != null){

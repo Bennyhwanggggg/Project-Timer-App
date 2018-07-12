@@ -9,6 +9,8 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
+import android.support.v4.app.FragmentManager;
+import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
@@ -31,14 +33,20 @@ public class MainActivity extends AppCompatActivity implements CursorRecyclerVie
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        String[] projection = {TasksContract.Columns._ID,
-                                TasksContract.Columns.TASKS_NAME,
-                                TasksContract.Columns.TASKS_DESCRIPTION,
-                                TasksContract.Columns.TASKS_SORTORDER};
-        ContentResolver contentResolver = getContentResolver();
-
-
-        ContentValues values = new ContentValues();
+        if(findViewById(R.id.task_details_container) != null){
+            // the detail container will only be present in the large screen layouts (res/values-land and res/values-sw600dp
+            // if this view is present, the activity should be in two-pane mode
+            mTwoPane = true;
+        }
+//
+//        String[] projection = {TasksContract.Columns._ID,
+//                                TasksContract.Columns.TASKS_NAME,
+//                                TasksContract.Columns.TASKS_DESCRIPTION,
+//                                TasksContract.Columns.TASKS_SORTORDER};
+//        ContentResolver contentResolver = getContentResolver();
+//
+//
+//        ContentValues values = new ContentValues();
 
         // to put new value to insert
 //        values.put(TasksContract.Columns.TASKS_NAME, "New Task 1");
@@ -70,7 +78,7 @@ public class MainActivity extends AppCompatActivity implements CursorRecyclerVie
 //        String[] args = {"For deletion"};
 //        int count = contentResolver.delete(TasksContract.CONTENT_URI, selection, args); // look for tasks where description is "For deletion" to delete.
 
-        Cursor cursor = contentResolver.query(TasksContract.CONTENT_URI, projection, null, null, TasksContract.Columns.TASKS_NAME);
+//        Cursor cursor = contentResolver.query(TasksContract.CONTENT_URI, projection, null, null, TasksContract.Columns.TASKS_NAME);
 
 //        Cursor cursor = contentResolver.query(TasksContract.buildTaskUri(3),
 //                projection,
@@ -141,7 +149,21 @@ public class MainActivity extends AppCompatActivity implements CursorRecyclerVie
     private void taskEditRequest(Task task){
         Log.d(TAG, "taskEditRequest: starts");
         if(mTwoPane){
-            Log.d(TAG, "taskEditRequest: Tablet mode");
+            Log.d(TAG, "taskEditRequest: Two pane mode");
+            // get fragment manager to add fragment
+            AddEditActivityFragment fragment = new AddEditActivityFragment();
+
+            // for adding
+            Bundle arguments = new Bundle();
+            arguments.putSerializable(Task.class.getSimpleName(), task);
+            fragment.setArguments(arguments);
+
+            FragmentManager fragmentManager = getSupportFragmentManager();
+            // FragmentTransaction queues up the changes and perform them
+            FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
+            fragmentTransaction.replace(R.id.task_details_container, fragment); // replace instead of add. Replace will work even if nothing existed.
+            fragmentTransaction.commit();
+
         } else {
             Log.d(TAG, "taskEditRequest: Single pane mode");
             // start the activity for the selected item id.
