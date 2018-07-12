@@ -110,7 +110,7 @@ public class AppProvider extends ContentProvider {
         Cursor cursor = queryBuilder.query(db, projection, selection, selectionArgs, null, null, sortOrder);
         Log.d(TAG, "query: rows in returned cursor = " + cursor.getCount());
 
-        cursor.setNotificationUri(getContext().getContentResolver(), uri); // The change is automatically handled now. Our uri represent the table row.
+        cursor.setNotificationUri(getContext().getContentResolver(), uri); // The change is automatically handled now. Our uri represent the table row. This keep recycler view consistent
         return cursor;
 
     }

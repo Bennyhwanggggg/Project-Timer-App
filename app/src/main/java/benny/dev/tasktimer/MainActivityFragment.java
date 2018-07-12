@@ -48,7 +48,7 @@ public class MainActivityFragment extends Fragment implements LoaderManager.Load
         RecyclerView recyclerView = (RecyclerView) view.findViewById(R.id.task_list);
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
 
-        mAdapter = new CursorRecyclerViewAdapter(null); // pass null since we don't have data yet.
+        mAdapter = new CursorRecyclerViewAdapter(null, (CursorRecyclerViewAdapter.OnTaskClickListener) getActivity()); // pass null for cursor as we don't have data, but we also need to cast the activity to pass the button function.
         recyclerView.setAdapter(mAdapter);
         Log.d(TAG, "onCreateView: returning");
         return view;
@@ -60,9 +60,11 @@ public class MainActivityFragment extends Fragment implements LoaderManager.Load
         Log.d(TAG, "onCreateLoader: starts with id = " + id);
         String[] projection = {TasksContract.Columns._ID, TasksContract.Columns.TASKS_NAME,
                                 TasksContract.Columns.TASKS_DESCRIPTION, TasksContract.Columns.TASKS_SORTORDER};
+        // <order by> Task.SortOrder, Task.Name COLLATE NOCASE
         String sortOrder = TasksContract.Columns.TASKS_SORTORDER + "," + TasksContract.Columns.TASKS_NAME;
         switch (id){
             case LOADER_ID:
+                // sortOrder is a SQL Order by clause without the sort order syntax
                 return new CursorLoader(getActivity(), TasksContract.CONTENT_URI, projection, null, null, sortOrder); // since we want all rows and columns, selection and selection args are null
                 default:
                     throw new InvalidParameterException(TAG + " .OnCreateLoader called with invalid loader id " + id);

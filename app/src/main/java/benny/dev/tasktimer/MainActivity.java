@@ -16,7 +16,7 @@ import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements CursorRecyclerViewAdapter.OnTaskClickListener{
     private static final String TAG = "MainActivity";
 
     // Whether or not the activity is in 2-pane modes, i.e landscape on tablet
@@ -126,6 +126,16 @@ public class MainActivity extends AppCompatActivity {
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    public void onEditClick(Task task) {
+        taskEditRequest(task);
+    }
+
+    @Override
+    public void onDeleteClick(Task task) {
+
     }
 
     private void taskEditRequest(Task task){
