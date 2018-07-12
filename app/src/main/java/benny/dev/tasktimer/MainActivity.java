@@ -1,7 +1,7 @@
 package benny.dev.tasktimer;
 
 import android.annotation.SuppressLint;
-import android.app.AlertDialog;
+import android.support.v7.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
@@ -225,7 +225,7 @@ public class MainActivity extends AppCompatActivity implements CursorRecyclerVie
         args.putLong("TaskId", task.getId());
 
         dialog.setArguments(args);
-        dialog.show(getFragmentManager(), null);
+        dialog.show(getSupportFragmentManager(), null);
 
         // if not commented, when dialog popup delete occurs anyway
 //        getContentResolver().delete(TasksContract.buildTaskUri(task.getId()), null, null); // this uses contentresolvers method to delete
@@ -323,7 +323,7 @@ public class MainActivity extends AppCompatActivity implements CursorRecyclerVie
             args.putInt(AppDialog.DIALOG_NEGATIVE_RID, R.string.cancelEditDiag_negative_caption);
 
             dialog.setArguments(args);
-            dialog.show(getFragmentManager(), null);
+            dialog.show(getSupportFragmentManager(), null);
         }
     }
 
