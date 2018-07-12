@@ -20,4 +20,7 @@
     <string name="cancel">CANCEL</string>
     <string name="deldiag_positive_caption">Delete</string>
     <string name="deldiag_message">Delete?</string>
+    <string name="cancelEditDiag_message">Unsaved changes will be discarded. Are you sure?</string>
+    <string name="cancelEditDiag_positive_caption">Continue</string>
+    <string name="cancelEditDiag_negative_caption">Abandon Changes</string>
 </resources>

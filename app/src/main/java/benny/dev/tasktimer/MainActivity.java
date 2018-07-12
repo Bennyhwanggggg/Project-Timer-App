@@ -14,11 +14,13 @@ import android.view.MenuItem;
 public class MainActivity extends AppCompatActivity implements CursorRecyclerViewAdapter.OnTaskClickListener,
         AddEditActivityFragment.OnSaveClicked,
         AppDialog.DialogEvents {
-    public static final int DELETE_DIALOG_ID = 1;
+    public static final int DIALOG_ID_DELETE = 1;
     private static final String TAG = "MainActivity";
-    private static final String ADD_EDIT_FRAGMENT = "AddEditFragment";
+
     // Whether or not the activity is in 2-pane modes, i.e landscape on tablet
     private boolean mTwoPane = false;
+
+    public static final int DIALOG_ID_CANCEL_EDIT = 2;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -154,7 +156,7 @@ public class MainActivity extends AppCompatActivity implements CursorRecyclerVie
         Log.d(TAG, "onDeleteClick: starts");
         AppDialog dialog = new AppDialog();
         Bundle args = new Bundle();
-        args.putInt(AppDialog.DIALOG_ID, DELETE_DIALOG_ID); // put DELETE_DIALOG_ID into AppDialog.DIALOG_ID
+        args.putInt(AppDialog.DIALOG_ID, DIALOG_ID_DELETE); // put DIALOG_ID_DELETE into AppDialog.DIALOG_ID
         args.putString(AppDialog.DIALOG_MESSAGE, getString(R.string.deldiag_message));
         args.putInt(AppDialog.DIALOG_POSITIVE_RID, R.string.deldiag_positive_caption);
 
@@ -204,22 +206,63 @@ public class MainActivity extends AppCompatActivity implements CursorRecyclerVie
     @Override
     public void onPositiveDialogResult(int dialogId, Bundle args) {
         Log.d(TAG, "onPositiveDialogResult: starts");
-        // delete after user confirms
-        Long taskId = args.getLong("TaskId"); // "TaskId" matches what we did above in onDelete method
-        if (BuildConfig.DEBUG && taskId == 0) {
-            throw new AssertionError("TaskId is zero");
+        // use dialogId to decide which instance is calling it and correspond accordingly.
+        switch (dialogId){
+            case DIALOG_ID_DELETE:
+                // delete after user confirms
+                Long taskId = args.getLong("TaskId"); // "TaskId" matches what we did above in onDelete method
+                if (BuildConfig.DEBUG && taskId == 0) {
+                    throw new AssertionError("TaskId is zero");
+                }
+                getContentResolver().delete(TasksContract.buildTaskUri(taskId), null, null);
+                break;
+            case DIALOG_ID_CANCEL_EDIT:
+                // no action required, user can continue editing
+                break;
         }
-        getContentResolver().delete(TasksContract.buildTaskUri(taskId), null, null);
     }
 
     @Override
     public void onNegativeDialogResult(int dialogId, Bundle args) {
         Log.d(TAG, "onNegativeDialogResult: starts");
+        switch (dialogId){
+            case DIALOG_ID_DELETE:
+                // no action required.
+                break;
+            case DIALOG_ID_CANCEL_EDIT:
+                // should exit edit
+                finish();
+                break;
+        }
     }
 
-    // users press back button, then nothing happens
+    // users press background, then nothing happens
     @Override
     public void onDialogCancelled(int dialogId) {
         Log.d(TAG, "onDialogCancelled: starts");
+    }
+
+    @Override
+    public void onBackPressed() {
+        // this function where we ask if user wants to discard edit should only occurs in two pane mode
+        Log.d(TAG, "onBackPressed: starts");
+//        super.onBackPressed(); // commenting this out stops the back button from working.
+        FragmentManager fragmentManager = getSupportFragmentManager();
+        AddEditActivityFragment fragment = (AddEditActivityFragment) fragmentManager.findFragmentById(R.id.task_details_container);
+        if (fragment == null || fragment.canClose()) { // canClose is implemented by ourselves.
+            // if not in two pane mode (fragment not displayed)
+            super.onBackPressed();
+        } else {
+            // pop up dialog to confirm to quit editing
+            AppDialog dialog = new AppDialog();
+            Bundle args = new Bundle();
+            args.putInt(AppDialog.DIALOG_ID, DIALOG_ID_CANCEL_EDIT);
+            args.putString(AppDialog.DIALOG_MESSAGE, getString(R.string.cancelEditDiag_message));
+            args.putInt(AppDialog.DIALOG_POSITIVE_RID, R.string.cancelEditDiag_positive_caption);
+            args.putInt(AppDialog.DIALOG_NEGATIVE_RID, R.string.cancelEditDiag_negative_caption);
+
+            dialog.setArguments(args);
+            dialog.show(getFragmentManager(), null);
+        }
     }
 }
