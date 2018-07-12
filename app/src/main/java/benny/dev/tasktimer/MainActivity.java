@@ -135,7 +135,7 @@ public class MainActivity extends AppCompatActivity implements CursorRecyclerVie
 
     @Override
     public void onDeleteClick(Task task) {
-
+        getContentResolver().delete(TasksContract.buildTaskUri(task.getId()), null, null);
     }
 
     private void taskEditRequest(Task task){
