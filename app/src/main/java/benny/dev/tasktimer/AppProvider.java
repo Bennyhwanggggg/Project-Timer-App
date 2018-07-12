@@ -106,7 +106,13 @@ public class AppProvider extends ContentProvider {
         }
 
         SQLiteDatabase db = mOpenHelper.getReadableDatabase();
-        return queryBuilder.query(db, projection, selection, selectionArgs, null, null, sortOrder);
+//        return queryBuilder.query(db, projection, selection, selectionArgs, null, null, sortOrder);
+        Cursor cursor = queryBuilder.query(db, projection, selection, selectionArgs, null, null, sortOrder);
+        Log.d(TAG, "query: rows in returned cursor = " + cursor.getCount());
+
+        cursor.setNotificationUri(getContext().getContentResolver(), uri); // The change is automatically handled now. Our uri represent the table row.
+        return cursor;
+
     }
 
     @Nullable
@@ -173,6 +179,14 @@ public class AppProvider extends ContentProvider {
             default:
                 throw new IllegalArgumentException("Unknown uri: " + uri);
         }
+
+        if(recordId >= 0){ // requery if data change. This will be -1, if no data change.
+            // something was inserted
+            Log.d(TAG, "insert: Setting notifyChanged with " + uri);
+            getContext().getContentResolver().notifyChange(uri, null); // give the uri thats changed. Cursor loaders are automatically registered.
+        } else {
+            Log.d(TAG, "insert: nothing inserted");
+        }
         Log.d(TAG, "Exiting insert, returning " + returnUri);
         return returnUri;
     }
@@ -216,6 +230,13 @@ public class AppProvider extends ContentProvider {
             default:
                 throw new IllegalArgumentException("Unknown uri: " + uri);
         }
+        if(count > 0){
+            // something was deleted
+            Log.d(TAG, "delete: Setting notifyChange with " + uri);
+            getContext().getContentResolver().notifyChange(uri, null);
+        } else {
+            Log.d(TAG, "delete: nothing deleted");
+        }
         Log.d(TAG, "delete: end with count = " + count);
         return count;
     }
@@ -258,6 +279,13 @@ public class AppProvider extends ContentProvider {
 //                break;
             default:
                 throw new IllegalArgumentException("Unknown uri: " + uri);
+        }
+        if(count > 0){
+            // something was deleted
+            Log.d(TAG, "update: Setting notifyChange with " + uri);
+            getContext().getContentResolver().notifyChange(uri, null);
+        } else {
+            Log.d(TAG, "update: nothing updated");
         }
         Log.d(TAG, "update: end with count = " + count);
         return count;
