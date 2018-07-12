@@ -10,7 +10,7 @@ import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.View;
 
-public class AddEditActivity extends AppCompatActivity {
+public class AddEditActivity extends AppCompatActivity implements AddEditActivityFragment.OnSaveClicked{
 
     private static final String TAG = "AddEditActivity";
 
@@ -38,4 +38,8 @@ public class AddEditActivity extends AppCompatActivity {
         fragmentTransaction.commit();
     }
 
+    @Override
+    public void onSaveClick() {
+        finish(); // when you want the activity to finish
+    }
 }

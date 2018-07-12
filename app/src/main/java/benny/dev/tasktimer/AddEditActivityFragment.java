@@ -1,7 +1,9 @@
 package benny.dev.tasktimer;
 
+import android.app.Activity;
 import android.content.ContentResolver;
 import android.content.ContentValues;
+import android.content.Context;
 import android.support.v4.app.Fragment;
 import android.os.Bundle;
 import android.util.Log;
@@ -25,8 +27,34 @@ public class AddEditActivityFragment extends Fragment {
     private EditText mSortOrderTextView;
     private Button mSaveButton;
 
+    private OnSaveClicked mSaveListener = null;
+
+    // use call back to notify fragment remove.
+    interface OnSaveClicked {
+        void onSaveClick();
+    }
+
     public AddEditActivityFragment() {
         Log.d(TAG, "AddEditActivityFragment: starts");
+    }
+
+    @Override
+    public void onAttach(Context context) {
+        Log.d(TAG, "onAttach: starts");
+        super.onAttach(context);
+        Activity activity = getActivity();
+        if(!(activity instanceof OnSaveClicked)){
+            throw new ClassCastException(activity.getClass().getSimpleName() + " must implement AddActivityFragment.OnSavedClicked Interface");
+        }
+        // setup listener when save button is clicked.
+        mSaveListener = (OnSaveClicked) activity;
+    }
+
+    @Override
+    public void onDetach() {
+        Log.d(TAG, "onDetach: starts");
+        super.onDetach();
+        mSaveListener = null;
     }
 
     @Override
@@ -104,6 +132,13 @@ public class AddEditActivityFragment extends Fragment {
                             contentResolver.insert(TasksContract.CONTENT_URI, values);
                         }
                 }
+                Log.d(TAG, "onClick: done editing");
+
+                // call listener method when button tapped.
+                if(mSaveListener != null){
+                    mSaveListener.onSaveClick();
+                }
+
             }
         });
 

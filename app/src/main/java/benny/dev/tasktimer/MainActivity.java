@@ -9,6 +9,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
+import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.AppCompatActivity;
@@ -18,7 +19,7 @@ import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
 
-public class MainActivity extends AppCompatActivity implements CursorRecyclerViewAdapter.OnTaskClickListener{
+public class MainActivity extends AppCompatActivity implements CursorRecyclerViewAdapter.OnTaskClickListener, AddEditActivityFragment.OnSaveClicked{
     private static final String TAG = "MainActivity";
 
     // Whether or not the activity is in 2-pane modes, i.e landscape on tablet
@@ -103,6 +104,20 @@ public class MainActivity extends AppCompatActivity implements CursorRecyclerVie
 
 
 
+    }
+
+    @Override
+    public void onSaveClick() {
+        Log.d(TAG, "onSaveClick: starts");
+        // remove fragment after click.
+        FragmentManager fragmentManager = getSupportFragmentManager();
+        Fragment fragment = fragmentManager.findFragmentById(R.id.task_details_container);
+        if(fragment != null){
+            // can simplify to one line.
+            FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
+            fragmentTransaction.remove(fragment);
+            fragmentTransaction.commit();
+        }
     }
 
     @Override
