@@ -4,6 +4,7 @@ import android.annotation.SuppressLint;
 import android.content.DialogInterface;
 import android.content.res.Configuration;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
@@ -15,6 +16,8 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.TextView;
+
+import benny.dev.tasktimer.debug.TestData;
 
 public class MainActivity extends AppCompatActivity implements CursorRecyclerViewAdapter.OnTaskClickListener,
         AddEditActivityFragment.OnSaveClicked,
@@ -169,6 +172,10 @@ public class MainActivity extends AppCompatActivity implements CursorRecyclerVie
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.menu_main, menu);
+        if(BuildConfig.DEBUG) {
+            MenuItem generate = menu.findItem(R.id.menumain_generate);
+            generate.setVisible(true);
+        }
         return true;
     }
 
@@ -191,6 +198,7 @@ public class MainActivity extends AppCompatActivity implements CursorRecyclerVie
                 showAboutDialog();
                 break;
             case R.id.menumain_generate:
+                TestData.generateTestData(getContentResolver());
                 break;
             case android.R.id.home:
                 Log.d(TAG, "onOptionsItemSelected: Home button pressed");
@@ -226,7 +234,7 @@ public class MainActivity extends AppCompatActivity implements CursorRecyclerVie
         mDialog = builder.create();
         mDialog.setCanceledOnTouchOutside(true);
 
-        TextView tv = (TextView) messageView.findViewById(R.id.about_version);
+        TextView tv = messageView.findViewById(R.id.about_version);
         tv.setText("v" + BuildConfig.VERSION_NAME);
 
         mDialog.show();
@@ -261,12 +269,12 @@ public class MainActivity extends AppCompatActivity implements CursorRecyclerVie
 //    }
 
     @Override
-    public void onEditClick(Task task) {
+    public void onEditClick(@NonNull Task task) {
         taskEditRequest(task);
     }
 
     @Override
-    public void onDeleteClick(Task task) {
+    public void onDeleteClick(@NonNull Task task) {
         // call dialog to confirm delete before actual delete
         Log.d(TAG, "onDeleteClick: starts");
         AppDialog dialog = new AppDialog();
@@ -427,6 +435,12 @@ public class MainActivity extends AppCompatActivity implements CursorRecyclerVie
         }
     }
 
+    @Override
+    public void onAttachFragment(Fragment fragment) {
+        Log.d(TAG, "onAttachFragment: called, fragment is " + fragment.toString());
+        super.onAttachFragment(fragment);
+    }
+
     private void showConfirmationDialog(int dialogId){
         // pop up dialog to confirm to quit editing
         AppDialog dialog = new AppDialog();
@@ -439,4 +453,11 @@ public class MainActivity extends AppCompatActivity implements CursorRecyclerVie
         dialog.setArguments(args);
         dialog.show(getSupportFragmentManager(), null);
     }
+
+    @Override
+    public void onTaskLongClick(@NonNull Task task) {
+        // Required to satisfy the interface
+    }
+
+
 }

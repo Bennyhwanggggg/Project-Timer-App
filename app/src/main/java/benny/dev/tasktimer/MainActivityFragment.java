@@ -1,6 +1,8 @@
 package benny.dev.tasktimer;
 
 import android.app.Activity;
+import android.content.ContentResolver;
+import android.content.ContentValues;
 import android.database.Cursor;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -15,6 +17,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.TextView;
 
 import java.security.InvalidParameterException;
 
@@ -28,6 +31,8 @@ public class MainActivityFragment extends Fragment implements LoaderManager.Load
     public static final int LOADER_ID = 0;
 
     private CursorRecyclerViewAdapter mAdapter; // add adapter reference
+
+    private Timing mCurrentTiming = null;
 
     public MainActivityFragment() {
         Log.d(TAG, "MainActivityFragment: starts");
@@ -47,10 +52,11 @@ public class MainActivityFragment extends Fragment implements LoaderManager.Load
 
         getLoaderManager().initLoader(LOADER_ID, null, this); // args always null in Android's Loader class. callback is which object will be handling the callback, which is usually the fragment
 
+        setTimingText(mCurrentTiming);
     }
 
     @Override
-    public void onEditClick(Task task) {
+    public void onEditClick(@NonNull Task task) {
         Log.d(TAG, "onEditClick: starts");
         // get a reference to the fragment activity and call the corresponding method in the activity.
         CursorRecyclerViewAdapter.OnTaskClickListener listener = (CursorRecyclerViewAdapter.OnTaskClickListener) getActivity();
@@ -60,11 +66,61 @@ public class MainActivityFragment extends Fragment implements LoaderManager.Load
     }
 
     @Override
-    public void onDeleteClick(Task task) {
+    public void onDeleteClick(@NonNull Task task) {
         Log.d(TAG, "onDeleteClick: starts");
         CursorRecyclerViewAdapter.OnTaskClickListener listener = (CursorRecyclerViewAdapter.OnTaskClickListener) getActivity();
         if (listener != null){
             listener.onDeleteClick(task);
+        }
+    }
+
+    @Override
+    public void onTaskLongClick(@NonNull Task task) {
+        Log.d(TAG, "onTaskLongClick: called");
+        if (mCurrentTiming != null) {
+            if (task.getId() == mCurrentTiming.getTask().getId()) {
+                // the current task was tapped a second time, so stop timing
+                saveTiming(mCurrentTiming);
+                mCurrentTiming = null;
+                setTimingText(null);
+            } else {
+                // a new task is being timed, so stop the old one first
+                saveTiming(mCurrentTiming);
+                mCurrentTiming = new Timing(task);
+                setTimingText(mCurrentTiming);
+            }
+        } else {
+            // no task being timed, so start timing the new task
+            mCurrentTiming = new Timing(task);
+            setTimingText(mCurrentTiming);
+        }
+    }
+
+    private void saveTiming(@NonNull Timing currentTiming) {
+        Log.d(TAG, "Entering saveTiming");
+
+        // If we have an open timing, set the duration and save
+        currentTiming.setDuration();
+
+        ContentResolver contentResolver = getActivity().getContentResolver();
+        ContentValues values = new ContentValues();
+        values.put(TimingsContract.Columns.TIMINGS_TASK_ID, currentTiming.getTask().getId());
+        values.put(TimingsContract.Columns.TIMINGS_START_TIME, currentTiming.getStartTime());
+        values.put(TimingsContract.Columns.TIMINGS_DURATION, currentTiming.getDuration());
+
+        // update table in database
+        contentResolver.insert(TimingsContract.CONTENT_URI, values);
+
+        Log.d(TAG, "Exiting saveTiming");
+    }
+
+    private void setTimingText(Timing timing) {
+        TextView taskName = getActivity().findViewById(R.id.current_task);
+
+        if (timing != null) {
+            taskName.setText(getString(R.string.current_timing_text, timing.getTask().getName()));
+        } else {
+            taskName.setText(R.string.no_task_message);
         }
     }
 

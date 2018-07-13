@@ -20,26 +20,26 @@ class Task implements Serializable{
         mSortOrder = sortOrder;
     }
 
-    public long getId() {
+    long getId() {
         return m_Id;
     }
 
     // need setter for id as we may insert new field
 
 
-    public void setId(long id) {
+    void setId(long id) {
         this.m_Id = id;
     }
 
-    public String getName() {
+    String getName() {
         return mName;
     }
 
-    public String getDescription() {
+    String getDescription() {
         return mDescription;
     }
 
-    public int getSortOrder() {
+    int getSortOrder() {
         return mSortOrder;
     }
 
