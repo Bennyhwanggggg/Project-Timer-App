@@ -27,18 +27,22 @@ public class AddEditActivity extends AppCompatActivity implements AddEditActivit
 
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
-        // get fragment manager to add fragment
-        AddEditActivityFragment fragment = new AddEditActivityFragment();
-
-        Bundle arguments = getIntent().getExtras();
-//        arguments.putSerializable(Task.class.getSimpleName(), ge);
-        fragment.setArguments(arguments);
-
+        // Only create a new fragment if necessary, otherwise duplicate creations because Android automatically creates one on rotation can cause potential issues.
         FragmentManager fragmentManager = getSupportFragmentManager();
-        // FragmentTransaction queues up the changes and perform them
-        FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
-        fragmentTransaction.replace(R.id.fragment, fragment); // replace instead of add. Replace will work even if nothing existed.
-        fragmentTransaction.commit();
+        if (fragmentManager.findFragmentById(R.id.fragment) == null){ // Google method to check if savedInstanceStace == null is more efficient
+                // get fragment manager to add fragment
+            AddEditActivityFragment fragment = new AddEditActivityFragment();
+
+            Bundle arguments = getIntent().getExtras();
+    //        arguments.putSerializable(Task.class.getSimpleName(), ge);
+            fragment.setArguments(arguments);
+
+            
+            // FragmentTransaction queues up the changes and perform them
+            FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
+            fragmentTransaction.replace(R.id.fragment, fragment); // replace instead of add. Replace will work even if nothing existed.
+            fragmentTransaction.commit();
+        }
     }
 
     @Override

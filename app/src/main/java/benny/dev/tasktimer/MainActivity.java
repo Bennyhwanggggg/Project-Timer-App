@@ -179,6 +179,8 @@ public class MainActivity extends AppCompatActivity implements CursorRecyclerVie
 
         mDialog.show();
     }
+
+    // Old ver
 //@SuppressLint("SetTextI18n")
 //    public void showAboutDialog(){
 //        @SuppressLint("InflateParams") View messageView = getLayoutInflater().inflate(R.layout.about, null, false); // no root view we can sensibly use
