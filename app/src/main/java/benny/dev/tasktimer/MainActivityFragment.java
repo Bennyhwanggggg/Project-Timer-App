@@ -1,5 +1,6 @@
 package benny.dev.tasktimer;
 
+import android.app.Activity;
 import android.database.Cursor;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -20,7 +21,7 @@ import java.security.InvalidParameterException;
 /**
  * A placeholder fragment containing a simple view.
  */
-public class MainActivityFragment extends Fragment implements LoaderManager.LoaderCallbacks<Cursor> {
+public class MainActivityFragment extends Fragment implements LoaderManager.LoaderCallbacks<Cursor>, CursorRecyclerViewAdapter.OnTaskClickListener {
 
     private static final String TAG = "MainActivityFragment";
 
@@ -37,7 +38,34 @@ public class MainActivityFragment extends Fragment implements LoaderManager.Load
         // loader better initialised here
         Log.d(TAG, "onActivityCreated: starts");
         super.onActivityCreated(savedInstanceState);
+
+        // Activities containing this fragment must implement its callbacks
+        Activity activity = getActivity();
+        if(!(activity instanceof CursorRecyclerViewAdapter.OnTaskClickListener)){
+            throw new ClassCastException(activity.getClass().getSimpleName() + " must implement CursorRecyclerViewAdapter.OnTaskClickListener)Interface");
+        }
+
         getLoaderManager().initLoader(LOADER_ID, null, this); // args always null in Android's Loader class. callback is which object will be handling the callback, which is usually the fragment
+
+    }
+
+    @Override
+    public void onEditClick(Task task) {
+        Log.d(TAG, "onEditClick: starts");
+        // get a reference to the fragment activity and call the corresponding method in the activity.
+        CursorRecyclerViewAdapter.OnTaskClickListener listener = (CursorRecyclerViewAdapter.OnTaskClickListener) getActivity();
+        if (listener != null){
+            listener.onEditClick(task);
+        }
+    }
+
+    @Override
+    public void onDeleteClick(Task task) {
+        Log.d(TAG, "onDeleteClick: starts");
+        CursorRecyclerViewAdapter.OnTaskClickListener listener = (CursorRecyclerViewAdapter.OnTaskClickListener) getActivity();
+        if (listener != null){
+            listener.onDeleteClick(task);
+        }
     }
 
     @Override
@@ -48,10 +76,24 @@ public class MainActivityFragment extends Fragment implements LoaderManager.Load
         RecyclerView recyclerView = (RecyclerView) view.findViewById(R.id.task_list);
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
 
-        mAdapter = new CursorRecyclerViewAdapter(null, (CursorRecyclerViewAdapter.OnTaskClickListener) getActivity()); // pass null for cursor as we don't have data, but we also need to cast the activity to pass the button function.
+        if (mAdapter == null) {
+            // use this since we have implemented the interface and adapater exist in the fragment so its lifecycle is the same.
+            mAdapter = new CursorRecyclerViewAdapter(null, this); // pass null for cursor as we don't have data, but we also need to cast the activity to pass the button function.
+//        } else {
+//            mAdapter.setListener((CursorRecyclerViewAdapter.OnTaskClickListener) getActivity()); // use setter to retrieve the reference
+
+        }
         recyclerView.setAdapter(mAdapter);
         Log.d(TAG, "onCreateView: returning");
         return view;
+    }
+
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        Log.d(TAG, "onCreate: starts");
+        super.onCreate(savedInstanceState);
+        // to retain fragment
+        setRetainInstance(true);
     }
 
     @NonNull
@@ -95,4 +137,6 @@ public class MainActivityFragment extends Fragment implements LoaderManager.Load
         Log.d(TAG, "onLoaderReset: starts");
         mAdapter.swapCursor(null); // now the adapter doesn't have the old reference anymore.
     }
+
+
 }

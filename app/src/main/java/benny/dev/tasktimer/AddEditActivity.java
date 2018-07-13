@@ -21,15 +21,17 @@ public class AddEditActivity extends AppCompatActivity implements AddEditActivit
     protected void onCreate(Bundle savedInstanceState) {
         Log.d(TAG, "onCreate: starts");
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_add_edit);
+        // setContentView(R.layout.activity_add_edit);
+        setContentView(R.layout.fragment_add_edit);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
+        if (savedInstanceState == null){
         // Only create a new fragment if necessary, otherwise duplicate creations because Android automatically creates one on rotation can cause potential issues.
-        FragmentManager fragmentManager = getSupportFragmentManager();
-        if (fragmentManager.findFragmentById(R.id.fragment) == null){ // Google method to check if savedInstanceStace == null is more efficient
+            FragmentManager fragmentManager = getSupportFragmentManager();
+//        if (fragmentManager.findFragmentById(R.id.fragment) == null){ // Google method to check if savedInstanceStace == null is more efficient
                 // get fragment manager to add fragment
             AddEditActivityFragment fragment = new AddEditActivityFragment();
 

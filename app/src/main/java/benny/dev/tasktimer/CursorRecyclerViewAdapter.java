@@ -29,6 +29,10 @@ class CursorRecyclerViewAdapter extends RecyclerView.Adapter<CursorRecyclerViewA
         mListener = listener;
     }
 
+//    public void setListener(OnTaskClickListener listener) {
+//        mListener = listener;
+//    }
+
     @NonNull
     @Override
     public TaskViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
