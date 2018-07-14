@@ -32,4 +32,9 @@
     <string name="td_text_date">Date</string>
     <string name="td_text_duration">Duration</string>
     <string name="td_text_description">Description</string>
+    <string name="title_activity_durations_report">DurationsReport</string>
+    <string name="rm_title_filter_day">Show day</string>
+    <string name="rm_title_week">Show week</string>
+    <string name="rm_title_filter_date">Set report date</string>
+    <string name="rm_title_delete">Delete record</string>
 </resources>

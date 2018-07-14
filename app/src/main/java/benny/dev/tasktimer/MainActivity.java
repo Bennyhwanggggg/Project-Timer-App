@@ -2,6 +2,7 @@ package benny.dev.tasktimer;
 
 import android.annotation.SuppressLint;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.content.res.Configuration;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -191,6 +192,7 @@ public class MainActivity extends AppCompatActivity implements CursorRecyclerVie
                 taskEditRequest(null);
                 break;
             case R.id.menumain_showDurations:
+                startActivity(new Intent(this, DurationsReport.class));
                 break;
             case R.id.menumain_settings:
                 break;
