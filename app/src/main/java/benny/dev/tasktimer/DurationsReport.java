@@ -19,7 +19,9 @@ import android.text.format.DateFormat;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 import android.widget.DatePicker;
+import android.widget.TextView;
 
 import java.security.InvalidParameterException;
 import java.util.Date;
@@ -27,8 +29,9 @@ import java.util.GregorianCalendar;
 import java.util.Locale;
 
 public class DurationsReport extends AppCompatActivity implements LoaderManager.LoaderCallbacks<Cursor>,
-                                                                    DatePickerDialog.OnDateSetListener,
-                                                                    AppDialog.DialogEvents {
+        DatePickerDialog.OnDateSetListener,
+        AppDialog.DialogEvents,
+        View.OnClickListener{
 
     private static final String TAG = "DurationsReport";
 
@@ -68,7 +71,36 @@ public class DurationsReport extends AppCompatActivity implements LoaderManager.
             actionBar.setDisplayHomeAsUpEnabled(true);
         }
 
+        // restore bundle upon rotation
+        if (savedInstanceState != null){
+            long timeInMillis = savedInstanceState.getLong(CURRENT_DATE);
+            if (timeInMillis != 0){
+                // it will be zero when activity is first created so don't set anything
+                mCalendar.setTimeInMillis(timeInMillis);
+                // Since we are using a java date object to store date and that has hour, min, sec components, so we need to wipe it to be accurate
+                mCalendar.clear(GregorianCalendar.HOUR_OF_DAY); // we also want to clear the hour, min, sec
+                mCalendar.clear(GregorianCalendar.MINUTE);
+                mCalendar.clear(GregorianCalendar.SECOND);
+            }
+            mDisplayWeek = savedInstanceState.getBoolean(DISPLAY_WEEK);
+        }
+
         applyFilter(); // call apply filter on create so it fits whatever is initially selected.
+
+        // set listener to the headings for sorting
+        TextView taskName = findViewById(R.id.td_name_heading);
+        TextView taskDes = findViewById(R.id.td_description_heading);
+        TextView taskDate = findViewById(R.id.td_start_heading);
+        TextView taskDuration = findViewById(R.id.td_duration_heading);
+
+        taskName.setOnClickListener(this);
+        taskDate.setOnClickListener(this);
+        taskDuration.setOnClickListener(this);
+        if (taskDes != null) {
+            // description does not exist in portrait so need to check
+            taskDes.setOnClickListener(this);
+        }
+
 
         RecyclerView recyclerView = findViewById(R.id.td_list);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
@@ -79,6 +111,33 @@ public class DurationsReport extends AppCompatActivity implements LoaderManager.
         recyclerView.setAdapter(mAdapter);
 
         getSupportLoaderManager().initLoader(LOADER_ID, mArgs, this);
+    }
+
+    @Override
+    public void onClick(View v) {
+        Log.d(TAG, "onClick: starts");
+        switch (v.getId()){
+            case R.id.td_name_heading:
+                mArgs.putString(SORT_ORDER_PARAM, DurationsContract.Columns.DURATIONS_NAME);
+                break;
+            case R.id.td_description_heading:
+                mArgs.putString(SORT_ORDER_PARAM, DurationsContract.Columns.DURATIONS_DESCRIPTION);
+                break;
+            case R.id.td_duration_heading:
+                mArgs.putString(SORT_ORDER_PARAM, DurationsContract.Columns.DURATIONS_DURATION);
+                break;
+            case R.id.td_start_heading:
+                mArgs.putString(SORT_ORDER_PARAM, DurationsContract.Columns.DURATIONS_START_DATE);
+                break;
+        }
+        getSupportLoaderManager().restartLoader(LOADER_ID, mArgs, this);
+    }
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putLong(CURRENT_DATE, mCalendar.getTimeInMillis()); // store the date
+        outState.putBoolean(DISPLAY_WEEK, mDisplayWeek); // store whether we are showing weekly view or single day view.
     }
 
     @Override
@@ -99,11 +158,11 @@ public class DurationsReport extends AppCompatActivity implements LoaderManager.
                 getSupportLoaderManager().restartLoader(LOADER_ID, mArgs, this);
                 return true;
             case R.id.rm_filter_date:
-                showDatePickerDialog("Select date for report", DIALOG_FILTER); // Actual filter is done in onDateSet()
+                showDatePickerDialog(getString(R.string.date_title_filter), DIALOG_FILTER); // Actual filter is done in onDateSet()
                 return true;
             case R.id.rm_delete:
                 Log.d(TAG, "onOptionsItemSelected: deleting");
-                showDatePickerDialog("Select date to delete up to", DIALOG_DELETE); // Actual delete is done in onDateSet()
+                showDatePickerDialog(getString(R.string.date_title_delete), DIALOG_DELETE); // Actual delete is done in onDateSet()
                 return true;
         }
         return super.onOptionsItemSelected(item);
@@ -142,20 +201,19 @@ public class DurationsReport extends AppCompatActivity implements LoaderManager.
         Log.d(TAG, "onDateSet: starts");
         // Check the id so we know what to do with the result
         int dialogId = (int) view.getTag(); // retrieve result.
+        mCalendar.set(year, month, dayOfMonth, 0, 0, 0);
         switch (dialogId){
             case DIALOG_FILTER:
-                mCalendar.set(year, month, dayOfMonth, 0, 0, 0);
                 applyFilter();
                 getSupportLoaderManager().restartLoader(LOADER_ID, mArgs, this);
                 break;
             case DIALOG_DELETE:
-                mCalendar.set(year, month, dayOfMonth, 0, 0, 0);
                 String fromDate = DateFormat.getDateFormat(this).format(mCalendar.getTimeInMillis());
 
                 AppDialog dialog = new AppDialog();
                 Bundle args = new Bundle();
                 args.putInt(AppDialog.DIALOG_ID, 1); // we only have 1 dialog in this activity
-                args.putString(AppDialog.DIALOG_MESSAGE, "Are you sure you want to delete all timings before " + fromDate + "?");
+                args.putString(AppDialog.DIALOG_MESSAGE, getString(R.string.delete_timing_message, fromDate));
                 args.putLong(DELETION_DATE, mCalendar.getTimeInMillis());
                 dialog.setArguments(args);
                 dialog.show(getSupportFragmentManager(), null);
@@ -286,7 +344,7 @@ public class DurationsReport extends AppCompatActivity implements LoaderManager.
     }
 
     @Override
-    public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
+    public void onLoadFinished(@NonNull Loader<Cursor> loader, Cursor data) {
         Log.d(TAG, "Entering onLoadFinished");
         mAdapter.swapCursor(data);
         int count = mAdapter.getItemCount();
@@ -296,7 +354,7 @@ public class DurationsReport extends AppCompatActivity implements LoaderManager.
     }
 
     @Override
-    public void onLoaderReset(Loader<Cursor> loader) {
+    public void onLoaderReset(@NonNull Loader<Cursor> loader) {
         Log.d(TAG, "onLoaderReset: starts");
         mAdapter.swapCursor(null);
     }
