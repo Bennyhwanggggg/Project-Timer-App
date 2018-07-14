@@ -5,7 +5,7 @@
     <item
         android:id="@+id/rm_filter_period"
         android:icon="@drawable/ic_filter_7_black_24dp"
-        android:title="@string/rm_title_week"
+        android:title="@string/rm_title_filter_week"
         app:showAsAction="ifRoom" />
     <item
         android:id="@+id/rm_filter_date"

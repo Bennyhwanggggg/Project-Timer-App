@@ -13,9 +13,13 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
 
 import java.security.InvalidParameterException;
+import java.util.Date;
 import java.util.GregorianCalendar;
+import java.util.Locale;
 
 public class DurationsReport extends AppCompatActivity implements LoaderManager.LoaderCallbacks<Cursor> {
 
@@ -53,6 +57,8 @@ public class DurationsReport extends AppCompatActivity implements LoaderManager.
             actionBar.setDisplayHomeAsUpEnabled(true);
         }
 
+        applyFilter(); // call apply filter on create so it fits whatever is initially selected.
+
         RecyclerView recyclerView = findViewById(R.id.td_list);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
         // Create an empty adapter we will use, to display the loaded data.
@@ -62,6 +68,101 @@ public class DurationsReport extends AppCompatActivity implements LoaderManager.
         recyclerView.setAdapter(mAdapter);
 
         getSupportLoaderManager().initLoader(LOADER_ID, mArgs, this);
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.menu_report, menu);
+        return super.onCreateOptionsMenu(menu);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        int id = item.getItemId();
+        switch (id){
+            case R.id.rm_filter_period:
+                mDisplayWeek = !mDisplayWeek; // toggle between showing week or not
+                applyFilter();
+                invalidateOptionsMenu(); // force call to onPrepareOptionMenu to redraw the menu
+                getSupportLoaderManager().restartLoader(LOADER_ID, mArgs, this);
+                return true;
+            case R.id.rm_filter_date:
+                //TODO showDatePickerDialog // Actual filter is done in onDateSet()
+                return true;
+            case R.id.rm_delete:
+                //TODO showDatePickerDialog // Actual delete is done in onDateSet()
+                return true;
+        }
+        return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    public boolean onPrepareOptionsMenu(Menu menu) {
+        MenuItem item = menu.findItem(R.id.rm_filter_period);
+        if (item != null) {
+            // switch icon to 7 days or 1 day
+            if (mDisplayWeek) {
+                item.setIcon(R.drawable.ic_filter_1_black_24dp);
+                item.setTitle(R.string.rm_title_filter_day);
+            } else {
+                item.setIcon(R.drawable.ic_filter_7_black_24dp);
+                item.setTitle(R.string.rm_title_filter_week);
+            }
+        }
+        return super.onPrepareOptionsMenu(menu);
+    }
+
+    private void applyFilter(){
+        Log.d(TAG, "applyFilter: starts");
+
+        if(mDisplayWeek) {
+            // show records for the entire week
+
+            Date currentCalendarDate = mCalendar.getTime(); // store the time, so we can put it back.
+
+            // we have a date, so find out which day of week it is.
+            int dayOfWeek = mCalendar.get(GregorianCalendar.DAY_OF_WEEK);
+            int weekStart = mCalendar.getFirstDayOfWeek();
+            Log.d(TAG, "applyFilter: first day of calendar week is " + weekStart);
+            Log.d(TAG, "applyFilter: dayOfWeek is " + dayOfWeek);
+            Log.d(TAG, "applyFilter: date is " + mCalendar.getTime());
+
+            mCalendar.set(GregorianCalendar.DAY_OF_WEEK, weekStart);
+
+            String startDate = String.format(Locale.US, "%04d-%02d-%02d",
+                    mCalendar.get(GregorianCalendar.YEAR),
+                    mCalendar.get(GregorianCalendar.MONTH) + 1,
+                    mCalendar.get(GregorianCalendar.DAY_OF_MONTH));
+
+            mCalendar.add(GregorianCalendar.DATE, 6); // move forward 6 days to get get the end of the week
+
+            String endDate = String.format(Locale.US, "%04d-%02d-%02d",
+                    mCalendar.get(GregorianCalendar.YEAR),
+                    mCalendar.get(GregorianCalendar.MONTH) + 1,
+                    mCalendar.get(GregorianCalendar.DAY_OF_MONTH));
+
+            // Add the start and end date to selection arguments and query the database
+            String[] selectionArgs = new String[] {startDate, endDate};
+
+            // put the calendar back to where it was before we start jumping back and forth.
+            mCalendar.setTime(currentCalendarDate);
+            Log.d(TAG, "applyFilter(7): start date is: " + startDate + " and end date is: " + endDate);
+            mArgs.putString(SELECTION_PARAM, "StartDate between ? AND ?");
+            mArgs.putStringArray(SELECTION_ARGS_PARAM, selectionArgs);
+
+
+
+        } else {
+            // re-query for the current day.
+            String startDate = String.format(Locale.US, "%04d-%02d-%02d",
+                    mCalendar.get(GregorianCalendar.YEAR),
+                    mCalendar.get(GregorianCalendar.MONTH) + 1,
+                    mCalendar.get(GregorianCalendar.DAY_OF_MONTH));
+            String[] selectionArgs = new String[]{startDate};
+            Log.d(TAG, "In applyFilter(1), Start date is " + startDate);
+            mArgs.putString(SELECTION_PARAM, "StartDate = ?");
+            mArgs.putStringArray(SELECTION_ARGS_PARAM, selectionArgs);
+        }
     }
 
     @NonNull
