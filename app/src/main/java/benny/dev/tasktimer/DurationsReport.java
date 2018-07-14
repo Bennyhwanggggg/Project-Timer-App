@@ -1,9 +1,11 @@
 package benny.dev.tasktimer;
 
+import android.app.DatePickerDialog;
 import android.database.Cursor;
 import android.os.Bundle;
 import android.provider.BaseColumns;
 import android.support.annotation.NonNull;
+import android.support.v4.app.DialogFragment;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
@@ -15,17 +17,21 @@ import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.DatePicker;
 
 import java.security.InvalidParameterException;
 import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.Locale;
 
-public class DurationsReport extends AppCompatActivity implements LoaderManager.LoaderCallbacks<Cursor> {
+public class DurationsReport extends AppCompatActivity implements LoaderManager.LoaderCallbacks<Cursor>,
+                                                                    DatePickerDialog.OnDateSetListener{
 
     private static final String TAG = "DurationsReport";
 
     private static final int LOADER_ID = 1;
+    public static final int DIALOG_FILTER = 1;
+    public static final int DIALOG_DELETE = 2;
 
     private static final String SELECTION_PARAM = "SELECTION";
     private static final String SELECTION_ARGS_PARAM = "SELECTION_ARGS";
@@ -87,10 +93,10 @@ public class DurationsReport extends AppCompatActivity implements LoaderManager.
                 getSupportLoaderManager().restartLoader(LOADER_ID, mArgs, this);
                 return true;
             case R.id.rm_filter_date:
-                //TODO showDatePickerDialog // Actual filter is done in onDateSet()
+                showDatePickerDialog("Select date for report", DIALOG_FILTER); // Actual filter is done in onDateSet()
                 return true;
             case R.id.rm_delete:
-                //TODO showDatePickerDialog // Actual delete is done in onDateSet()
+                showDatePickerDialog("Select report for delete", DIALOG_DELETE); // Actual delete is done in onDateSet()
                 return true;
         }
         return super.onOptionsItemSelected(item);
@@ -110,6 +116,35 @@ public class DurationsReport extends AppCompatActivity implements LoaderManager.
             }
         }
         return super.onPrepareOptionsMenu(menu);
+    }
+
+    private void showDatePickerDialog(String title, int dialogId){
+        Log.d(TAG, "showDatePickerDialog: starts");
+        DialogFragment dialogFragment = new DatePickerFragment();
+        Bundle arguments = new Bundle();
+        arguments.putInt(DatePickerFragment.DATE_PICKER_ID, dialogId);
+        arguments.putString(DatePickerFragment.DATE_PICKER_TITLE, title);
+        arguments.putSerializable(DatePickerFragment.DATE_PICKER_DATE, mCalendar.getTime());
+        dialogFragment.setArguments(arguments);
+        dialogFragment.show(getSupportFragmentManager(), "datepicker");
+        Log.d(TAG, "showDatePickerDialog: ends");
+    }
+
+    @Override
+    public void onDateSet(DatePicker view, int year, int month, int dayOfMonth) {
+        Log.d(TAG, "onDateSet: starts");
+        // Check the id so we know what to do with the result
+        int dialogId = (int) view.getTag(); // retrieve result.
+        switch (dialogId){
+            case DIALOG_FILTER:
+                mCalendar.set(year, month, dayOfMonth, 0, 0, 0);
+                applyFilter();
+                getSupportLoaderManager().restartLoader(LOADER_ID, mArgs, this);
+            case DIALOG_DELETE:
+                break;
+            default:
+                throw new IllegalArgumentException("Invalid mode when receiving DatePickerDialog result.");
+        }
     }
 
     private void applyFilter(){
