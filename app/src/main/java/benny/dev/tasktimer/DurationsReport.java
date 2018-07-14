@@ -1,6 +1,7 @@
 package benny.dev.tasktimer;
 
 import android.app.DatePickerDialog;
+import android.content.ContentResolver;
 import android.database.Cursor;
 import android.os.Bundle;
 import android.provider.BaseColumns;
@@ -14,6 +15,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
+import android.text.format.DateFormat;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -25,7 +27,8 @@ import java.util.GregorianCalendar;
 import java.util.Locale;
 
 public class DurationsReport extends AppCompatActivity implements LoaderManager.LoaderCallbacks<Cursor>,
-                                                                    DatePickerDialog.OnDateSetListener{
+                                                                    DatePickerDialog.OnDateSetListener,
+                                                                    AppDialog.DialogEvents {
 
     private static final String TAG = "DurationsReport";
 
@@ -33,9 +36,11 @@ public class DurationsReport extends AppCompatActivity implements LoaderManager.
     public static final int DIALOG_FILTER = 1;
     public static final int DIALOG_DELETE = 2;
 
+
     private static final String SELECTION_PARAM = "SELECTION";
     private static final String SELECTION_ARGS_PARAM = "SELECTION_ARGS";
     private static final String SORT_ORDER_PARAM = "SORT_ORDER";
+    public static final String DELETION_DATE = "DELETION_DATE";
 
     public static final String CURRENT_DATE = "CURRENT_DATE";
     public static final String DISPLAY_WEEK = "DISPLAY_WEEK";
@@ -84,6 +89,7 @@ public class DurationsReport extends AppCompatActivity implements LoaderManager.
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
+        Log.d(TAG, "onOptionsItemSelected: starts");
         int id = item.getItemId();
         switch (id){
             case R.id.rm_filter_period:
@@ -96,7 +102,8 @@ public class DurationsReport extends AppCompatActivity implements LoaderManager.
                 showDatePickerDialog("Select date for report", DIALOG_FILTER); // Actual filter is done in onDateSet()
                 return true;
             case R.id.rm_delete:
-                showDatePickerDialog("Select report for delete", DIALOG_DELETE); // Actual delete is done in onDateSet()
+                Log.d(TAG, "onOptionsItemSelected: deleting");
+                showDatePickerDialog("Select date to delete up to", DIALOG_DELETE); // Actual delete is done in onDateSet()
                 return true;
         }
         return super.onOptionsItemSelected(item);
@@ -119,7 +126,7 @@ public class DurationsReport extends AppCompatActivity implements LoaderManager.
     }
 
     private void showDatePickerDialog(String title, int dialogId){
-        Log.d(TAG, "showDatePickerDialog: starts");
+        Log.d(TAG, "showDatePickerDialog: starts " + dialogId);
         DialogFragment dialogFragment = new DatePickerFragment();
         Bundle arguments = new Bundle();
         arguments.putInt(DatePickerFragment.DATE_PICKER_ID, dialogId);
@@ -140,11 +147,56 @@ public class DurationsReport extends AppCompatActivity implements LoaderManager.
                 mCalendar.set(year, month, dayOfMonth, 0, 0, 0);
                 applyFilter();
                 getSupportLoaderManager().restartLoader(LOADER_ID, mArgs, this);
+                break;
             case DIALOG_DELETE:
+                mCalendar.set(year, month, dayOfMonth, 0, 0, 0);
+                String fromDate = DateFormat.getDateFormat(this).format(mCalendar.getTimeInMillis());
+
+                AppDialog dialog = new AppDialog();
+                Bundle args = new Bundle();
+                args.putInt(AppDialog.DIALOG_ID, 1); // we only have 1 dialog in this activity
+                args.putString(AppDialog.DIALOG_MESSAGE, "Are you sure you want to delete all timings before " + fromDate + "?");
+                args.putLong(DELETION_DATE, mCalendar.getTimeInMillis());
+                dialog.setArguments(args);
+                dialog.show(getSupportFragmentManager(), null);
                 break;
             default:
                 throw new IllegalArgumentException("Invalid mode when receiving DatePickerDialog result.");
         }
+    }
+
+    private void deleteRecords(long timeInMillis) {
+        Log.d(TAG, "deleteRecords: starts");
+        long longDate = timeInMillis/1000; // we need time in seconds, not ms.
+        String[] selectioArgs = new String[] {Long.toString(longDate)};
+        String selection = TimingsContract.Columns.TIMINGS_START_TIME + " < ?";
+        Log.d(TAG, "deleteRecords: deleting records prior to " + longDate);
+
+        ContentResolver contentResolver = getContentResolver();
+        contentResolver.delete(TimingsContract.CONTENT_URI, selection, selectioArgs);
+        applyFilter();
+        getSupportLoaderManager().restartLoader(LOADER_ID, mArgs, this);
+        Log.d(TAG, "deleteRecords: ends");
+    }
+
+    @Override
+    public void onPositiveDialogResult(int dialogId, Bundle args) {
+        Log.d(TAG, "onPositiveDialogResult: starts");
+        long deleteDate = args.getLong(DELETION_DATE);
+        // clear records from the date selected
+        deleteRecords(deleteDate);
+        // re-query, in case we have deleted records on screen
+        getSupportLoaderManager().restartLoader(LOADER_ID, mArgs, this);
+    }
+
+    @Override
+    public void onNegativeDialogResult(int dialogId, Bundle args) {
+
+    }
+
+    @Override
+    public void onDialogCancelled(int dialogId) {
+
     }
 
     private void applyFilter(){

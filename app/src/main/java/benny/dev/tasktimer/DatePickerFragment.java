@@ -47,7 +47,7 @@ public class DatePickerFragment extends DialogFragment implements DatePickerDial
 
         @SuppressWarnings("ConstantConditions")
         // provide ability to use different title.
-        DatePickerDialog dpd = new DatePickerDialog(getContext(), this, year, month, day);
+        UnbuggyDatePickerDialog dpd = new UnbuggyDatePickerDialog(getContext(), this, year, month, day);
         if(title != null) {
             dpd.setTitle(title);
         }
